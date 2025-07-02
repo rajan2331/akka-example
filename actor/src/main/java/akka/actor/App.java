@@ -2,6 +2,7 @@ package akka.actor;
 
 import akka.actor.dto.Transaction;
 import akka.actor.service.FraudActor;
+import akka.actor.service.KafkaConsumerActor;
 import akka.actor.typed.ActorSystem;
 /**
  * Entry point
@@ -10,12 +11,12 @@ import akka.actor.typed.ActorSystem;
 public class App 
 {
     public static void main( String[] args )
-    {
+    {        ActorSystem<Transaction> fraudActor =
+    ActorSystem.create(FraudActor.create(), "FraudActorSystem");
 
-        ActorSystem<Transaction> system = ActorSystem.create(FraudActor.create(), "FraudSystem");
+    ActorSystem<KafkaConsumerActor.Start> kafkaActor =
+    		ActorSystem.create(KafkaConsumerActor.create(fraudActor), "KafkaConsumerSystem");
 
-        system.tell(new Transaction("txn-001", 2000.0, "user123"));
-        system.tell(new Transaction("txn-002", 15000.0, "user456"));
-        system.tell(new Transaction("txn-003", 60000.0, "user789"));
-    }
+    kafkaActor.tell(new KafkaConsumerActor.Start());
+}
 }
